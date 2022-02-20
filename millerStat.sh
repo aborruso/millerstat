@@ -51,11 +51,53 @@ fi
 cat "$folder"/processing/field_type | while read line; do
   fiedlType=$(echo $line | jq -r '.fiedlType')
   field=$(echo $line | jq -r '.field')
-  if ( [ "$fiedlType" == "int" ] || [ "$fiedlType" == "float" ] ); then
+  if ([ "$fiedlType" == "int" ] || [ "$fiedlType" == "float" ]); then
     mlrgo --icsv --ojsonl stats1 -f "$field" -a min,max,mode,mean then put '$field="'"$field"'"' then rename -r ''"${field}"'_,' "$folder"/input.csv >>"$folder"/processing/field_stats
   fi
 done
 
 ### join field type and stats ###
 
-mlrgo --ijsonl --ocsv join --ul -j field -f "$folder"/processing/field_type then unsparsify "$folder"/processing/field_stats
+mlrgo --ijsonl --ocsv join --ul -j field -f "$folder"/processing/field_type then unsparsify "$folder"/processing/field_stats >"$folder"/file_info.csv
+
+### count distinct ###
+
+if [ -f "$folder"/processing/field_unique ]; then
+  rm "$folder"/processing/field_unique
+fi
+
+cat "$folder"/processing/field_type | while read line; do
+  fiedlType=$(echo $line | jq -r '.fiedlType')
+  field=$(echo $line | jq -r '.field')
+  mlrgo --icsv --ojsonl uniq -n -f "${field}" then label "${field}_unique" then put '$field="'"$field"'"' then rename -r ''"${field}"'_,' input.csv >>"$folder"/processing/field_unique
+done
+
+mlrgo --ijsonl --ocsv cat "$folder"/processing/field_unique >"$folder"/processing/field_unique.csv
+
+### join unique values ###
+
+mlrgo --csv join --ul -j field -f "$folder"/file_info.csv then unsparsify "$folder"/processing/field_unique.csv >"$folder"/processing/tmp.csv
+
+mv "$folder"/processing/tmp.csv "$folder"/file_info.csv
+
+### count null ###
+
+if [ -f "$folder"/processing/field_null ]; then
+  rm "$folder"/processing/field_null
+fi
+
+mlrgo --csv put 'for (k,v in $*) { if (is_null($[k])) {$[k."_nullCheck"] = 1} else {$[k."_nullCheck"] = 0}}' then cut -r -f "_nullCheck" then rename -r '"_nullCheck",' "$folder"/input.csv >"$folder"/processing/field_null.csv
+
+cat "$folder"/processing/field_type | while read line; do
+  fiedlType=$(echo $line | jq -r '.fiedlType')
+  field=$(echo $line | jq -r '.field')
+  mlrgo --icsv --ojsonl stats1 -f "${field}" -a sum then put '$field="'"${field}"'"' then label null processing/field_null.csv >>"$folder"/processing/field_null
+done
+
+mlrgo --ijsonl --ocsv cat "$folder"/processing/field_null >"$folder"/processing/field_null.csv
+
+### join null values ###
+
+mlrgo --csv join --ul -j field -f "$folder"/file_info.csv then unsparsify "$folder"/processing/field_null.csv >"$folder"/processing/tmp.csv
+
+mv "$folder"/processing/tmp.csv "$folder"/file_info.csv
