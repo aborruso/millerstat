@@ -13,9 +13,6 @@ mkdir -p "$folder"/processing
 
 mlrgo --csv head -n 1 then put -q 'for (k in $*){print k}' "$folder"/input.csv >"$folder"/processing/field_order
 
-mlrgo -I --csv --implicit-csv-header cat then label field then cat -n then label field_fieldOrder "$folder"/processing/field_order
-
-
 ### field type ###
 
 # extract fields type by record
@@ -96,11 +93,5 @@ mlrgo --ijsonl --ocsv cat "$folder"/processing/field_null >"$folder"/processing/
 ### join null values ###
 
 mlrgo --csv join --ul -j field -f "$folder"/file_info.csv then unsparsify "$folder"/processing/field_null.csv >"$folder"/processing/tmp.csv
-
-mv "$folder"/processing/tmp.csv "$folder"/file_info.csv
-
-### apply the sorting of the input file ###
-
-mlrgo --csv join --ul -j field -f "$folder"/processing/field_order then unsparsify then sort -n field_fieldOrder then reorder -f field_fieldOrder,field "$folder"/file_info.csv >"$folder"/processing/tmp.csv
 
 mv "$folder"/processing/tmp.csv "$folder"/file_info.csv
