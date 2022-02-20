@@ -14,22 +14,18 @@ mkdir -p "$folder"/processing
 # extract fields type by record
 mlrgo --csv put 'for (k,v in $*) { $[k."_fieldType"] = typeof(v) }' "$folder"/input.csv >"$folder"/processing/field_type.csv
 
-fieldsArray=$(mlrgo --csv head -n 1 then cut -r -f "_fieldType" then put -q 'for (k in $*){print k}' "$folder"/processing/field_type.csv)
-
-SAVEIFS=$IFS         # Save current IFS (Internal Field Separator)
-IFS=$'\n'            # Change IFS to newline char
-names=($fieldsArray) # split the `names` string into an array
-IFS=$SAVEIFS         # Restore original IFS
-
 if [ -f "$folder"/processing/field_type ]; then
   rm "$folder"/processing/field_type
 fi
 
 mlrgo -I --csv sample -k 1000 "$folder"/processing/field_type.csv
 
+mlrgo --csv head -n 1 then cut -r -f "_fieldType" then put -q 'for (k in $*){print k}' "$folder"/processing/field_type.csv >"$folder"/processing/field_name
+
 # extract most common field type by field
-for ((i = 0; i < ${#names[@]}; i++)); do
-  mlrgo --icsv --ojsonl most-frequent -f "${names[$i]}" then head -n 1 then cut -x -f count then put '$field="'"${names[$i]}"'"' then label fieldType "$folder"/processing/field_type.csv >>"$folder"/processing/field_type
+
+cat "$folder"/processing/field_name | while read field; do
+  mlrgo --icsv --ojsonl most-frequent -f "${field}" then head -n 1 then cut -x -f count then put '$field="'"${field}"'"' then label fieldType "$folder"/processing/field_type.csv >>"$folder"/processing/field_type
 done
 
 mlrgo -I --jsonl put '$field=sub($field,"_fieldType","")' "$folder"/processing/field_type
@@ -47,6 +43,10 @@ cat "$folder"/processing/field_type | while read line; do
     mlrgo --icsv --ojsonl stats1 -f "$field" -a min,max,mode,mean then put '$field="'"$field"'"' then rename -r ''"${field}"'_,' "$folder"/input.csv >>"$folder"/processing/field_stats
   fi
 done
+
+if (! -f "$folder"/processing/field_stats); then
+  echo "No stats found"
+fi
 
 ### join field type and stats ###
 
