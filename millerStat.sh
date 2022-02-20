@@ -27,7 +27,7 @@ fi
 
 # extract most common field type by field
 for ((i = 0; i < ${#names[@]}; i++)); do
-  mlrgo --icsv --ojsonl most-frequent -f "${names[$i]}" then head -n 1 then cut -x -f count then put '$field="'"${names[$i]}"'"' then label fieldType "$folder"/processing/field_type.csv >>"$folder"/processing/field_type
+  mlrgo --icsv --ojsonl head -n 1000 then most-frequent -f "${names[$i]}" then head -n 1 then cut -x -f count then put '$field="'"${names[$i]}"'"' then label fieldType "$folder"/processing/field_type.csv >>"$folder"/processing/field_type
 done
 
 mlrgo -I --jsonl put '$field=sub($field,"_fieldType","")' "$folder"/processing/field_type
