@@ -30,3 +30,4 @@ It's a bad script for now, to start thinking about it.
 
 - [x] add count-distinct by field
 - [x] add null value count
+- [ ] sort fields as they are in input
