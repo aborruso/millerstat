@@ -9,10 +9,6 @@ folder="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 mkdir -p "$folder"/processing
 
-### fields list ###
-
-mlrgo --csv head -n 1 then put -q 'for (k in $*){print k}' "$folder"/input.csv >"$folder"/processing/field_order
-
 ### field type ###
 
 # extract fields type by record
