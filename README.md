@@ -32,6 +32,5 @@ It's a bad script for now, to start thinking about it.
 - [x] add null value count
 - [x] sort fields as they are in input
 - [x] remove jq
-- [x] most frequent field type on the first 1000
+- [x] to calculate field type on a subset extracting random 1000 record
 - [ ] to parallel all
-- [ ] to calculate field type on a subset extracting random 1000 record
