@@ -9,11 +9,6 @@ folder="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 mkdir -p "$folder"/processing
 
-#mlr --icsv --opprint put -q '
-#  is_null(@valuemax) || $value > @valuemax {@valuemax = $value; @recmax = $*};
-#  end {emit @recmax}
-#' input.csv
-
 ### fields list ###
 
 fields=$(mlrgo --icsv --ojsonl head -n 1 "$folder"/input.csv | jq -c '.|keys' | sed -r 's/(\[|\])//g')
