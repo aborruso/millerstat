@@ -13,9 +13,10 @@ mkdir -p "$folder"/processing
 
 fields=$(mlrgo --icsv --ojsonl head -n 1 "$folder"/input.csv | jq -c '.|keys' | sed -r 's/(\[|\])//g')
 
-mlrgo --icsv --ojsonl head -n 1 "$folder"/input.csv | jq -r '.|keys[]' >"$folder"/processing/field_order
+mlrgo --csv head -n 1 then put -q 'for (k in $*){print k}' "$folder"/input.csv >"$folder"/processing/field_order
 
-mlrgo -I --csv --implicit-csv-header cat then label field "$folder"/processing/field_order
+mlrgo -I --csv --implicit-csv-header cat then label field then cat -n then label field_fieldOrder "$folder"/processing/field_order
+
 
 ### field type ###
 
@@ -103,6 +104,6 @@ mv "$folder"/processing/tmp.csv "$folder"/file_info.csv
 
 ### apply the sorting of the input file ###
 
-mlrgo --csv join --ul -j field -f "$folder"/processing/field_order then unsparsify "$folder"/file_info.csv >"$folder"/processing/tmp.csv
+mlrgo --csv join --ul -j field -f "$folder"/processing/field_order then unsparsify then sort -n field_fieldOrder then reorder -f field_fieldOrder,field "$folder"/file_info.csv >"$folder"/processing/tmp.csv
 
 mv "$folder"/processing/tmp.csv "$folder"/file_info.csv
