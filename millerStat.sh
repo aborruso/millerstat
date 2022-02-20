@@ -11,8 +11,6 @@ mkdir -p "$folder"/processing
 
 ### fields list ###
 
-fields=$(mlrgo --icsv --ojsonl head -n 1 "$folder"/input.csv | jq -c '.|keys' | sed -r 's/(\[|\])//g')
-
 mlrgo --csv head -n 1 then put -q 'for (k in $*){print k}' "$folder"/input.csv >"$folder"/processing/field_order
 
 mlrgo -I --csv --implicit-csv-header cat then label field then cat -n then label field_fieldOrder "$folder"/processing/field_order
@@ -23,8 +21,7 @@ mlrgo -I --csv --implicit-csv-header cat then label field then cat -n then label
 # extract fields type by record
 mlrgo --csv put 'for (k,v in $*) { $[k."_fieldType"] = typeof(v) }' "$folder"/input.csv >"$folder"/processing/field_type.csv
 
-fields=$(mlrgo --icsv --ojsonl head -n 1 then cut -r -f "_fieldType" "$folder"/processing/field_type.csv | jq -c '.|keys' | sed -r 's/(\[|\])//g')
-fieldsArray=$(mlrgo --icsv --ojsonl head -n 1 then cut -r -f "_fieldType" "$folder"/processing/field_type.csv | jq -r '.|keys[]')
+fieldsArray=$(mlrgo --csv head -n 1 then cut -r -f "_fieldType" then put -q 'for (k in $*){print k}' "$folder"/processing/field_type.csv)
 
 SAVEIFS=$IFS         # Save current IFS (Internal Field Separator)
 IFS=$'\n'            # Change IFS to newline char
@@ -37,7 +34,7 @@ fi
 
 # extract most common field type by field
 for ((i = 0; i < ${#names[@]}; i++)); do
-  mlrgo --icsv --ojsonl most-frequent -f "${names[$i]}" then head -n 1 then cut -x -f count then put '$field="'"${names[$i]}"'"' then label fiedlType "$folder"/processing/field_type.csv >>"$folder"/processing/field_type
+  mlrgo --icsv --ojsonl most-frequent -f "${names[$i]}" then head -n 1 then cut -x -f count then put '$field="'"${names[$i]}"'"' then label fieldType "$folder"/processing/field_type.csv >>"$folder"/processing/field_type
 done
 
 mlrgo -I --jsonl put '$field=sub($field,"_fieldType","")' "$folder"/processing/field_type
@@ -49,9 +46,9 @@ if [ -f "$folder"/processing/field_stats ]; then
 fi
 
 cat "$folder"/processing/field_type | while read line; do
-  fiedlType=$(echo $line | jq -r '.fiedlType')
-  field=$(echo $line | jq -r '.field')
-  if ([ "$fiedlType" == "int" ] || [ "$fiedlType" == "float" ]); then
+  fieldType=$(echo $line | mlrgo --ijsonl --onidx cut -f fieldType)
+  field=$(echo $line | mlrgo --ijsonl --onidx cut -f field)
+  if ([ "$fieldType" == "int" ] || [ "$fieldType" == "float" ]); then
     mlrgo --icsv --ojsonl stats1 -f "$field" -a min,max,mode,mean then put '$field="'"$field"'"' then rename -r ''"${field}"'_,' "$folder"/input.csv >>"$folder"/processing/field_stats
   fi
 done
@@ -67,8 +64,8 @@ if [ -f "$folder"/processing/field_unique ]; then
 fi
 
 cat "$folder"/processing/field_type | while read line; do
-  fiedlType=$(echo $line | jq -r '.fiedlType')
-  field=$(echo $line | jq -r '.field')
+  fieldType=$(echo $line | mlrgo --ijsonl --onidx cut -f fieldType)
+  field=$(echo $line | mlrgo --ijsonl --onidx cut -f field)
   mlrgo --icsv --ojsonl uniq -n -f "${field}" then label "${field}_unique" then put '$field="'"$field"'"' then rename -r ''"${field}"'_,' input.csv >>"$folder"/processing/field_unique
 done
 
@@ -89,8 +86,8 @@ fi
 mlrgo --csv put 'for (k,v in $*) { if (is_null($[k])) {$[k."_nullCheck"] = 1} else {$[k."_nullCheck"] = 0}}' then cut -r -f "_nullCheck" then rename -r '"_nullCheck",' "$folder"/input.csv >"$folder"/processing/field_null.csv
 
 cat "$folder"/processing/field_type | while read line; do
-  fiedlType=$(echo $line | jq -r '.fiedlType')
-  field=$(echo $line | jq -r '.field')
+  fieldType=$(echo $line | mlrgo --ijsonl --onidx cut -f fieldType)
+  field=$(echo $line | mlrgo --ijsonl --onidx cut -f field)
   mlrgo --icsv --ojsonl stats1 -f "${field}" -a sum then put '$field="'"${field}"'"' then label null processing/field_null.csv >>"$folder"/processing/field_null
 done
 
