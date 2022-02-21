@@ -22,6 +22,7 @@ fi
 # It is useful for very large input files
 mlrgo -I --csv sample -k 1000 "$folder"/processing/field_type.csv
 
+# Extract field names of the field types fields
 mlrgo --csv head -n 1 then cut -r -f "_fieldType" then put -q 'for (k in $*){print k}' "$folder"/processing/field_type.csv >"$folder"/processing/field_name
 
 # extract most common field type by field
