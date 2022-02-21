@@ -19,10 +19,10 @@ Starting from this
 
 you will have
 
-| field | fiedlType | min | max | mode | mean | unique | null |
+| field | fieldType | min | max | mode | mean | unique | null |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| city | string |  |  |  |  | 4 | 1 |
 | id | int | 1 | 5 | 1 | 3 | 5 | 0 |
+| city | string |  |  |  |  | 4 | 1 |
 | value | int | 2 | 55 | 2 | 14 | 4 | 0 |
 
 It's a bad script for now, to start thinking about it.
