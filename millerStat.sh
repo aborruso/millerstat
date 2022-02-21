@@ -44,8 +44,12 @@ cat "$folder"/processing/field_type | while read line; do
   fi
 done
 
-if (! -f "$folder"/processing/field_stats); then
-  echo "No stats found"
+# if all fields are not numeric, create an empty file with all stats null
+if [ ! -f "$folder"/processing/field_stats ]; then
+  cat "$folder"/processing/field_name | while read field; do
+    echo "a=0" | mlrgo --ojsonl put '$min="";$max="";$mode="";$mean="";$field="'"$field"'"' then cut -x -f a >>"$folder"/processing/field_stats
+  done
+  mlrgo -I --jsonl put '$field=sub($field,"_fieldType","")' "$folder"/processing/field_stats
 fi
 
 ### join field type and stats ###
