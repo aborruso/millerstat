@@ -1,6 +1,6 @@
 # Miller stat
 
-A [bash script](millerStat.sh) that uses [Miller](https://miller.readthedocs.io/en/latest/) to extract by a CSV, for each field:
+A [bash script](millerStat.sh) that uses [Miller](https://miller.readthedocs.io/en/latest/) to extract from a CSV, for each field:
 
 - field type;
 - min, max, mode, mean
