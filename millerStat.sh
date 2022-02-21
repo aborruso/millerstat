@@ -18,6 +18,8 @@ if [ -f "$folder"/processing/field_type ]; then
   rm "$folder"/processing/field_type
 fi
 
+# Extract 1000 random lines, to be used as a basis for assigning the field type.
+# It is useful for very large input files
 mlrgo -I --csv sample -k 1000 "$folder"/processing/field_type.csv
 
 mlrgo --csv head -n 1 then cut -r -f "_fieldType" then put -q 'for (k in $*){print k}' "$folder"/processing/field_type.csv >"$folder"/processing/field_name
