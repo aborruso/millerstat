@@ -34,6 +34,7 @@ cat "$folder"/processing/field_name | while read field; do
    label fieldType "$folder"/processing/field_type.csv >>"$folder"/processing/field_type
 done
 
+# clean the field names, remove the "_fieldType" suffix
 mlrgo -I --jsonl put '$field=sub($field,"_fieldType","")' "$folder"/processing/field_type
 
 ### fields stats ###
@@ -42,6 +43,7 @@ if [ -f "$folder"/processing/field_stats ]; then
   rm "$folder"/processing/field_stats
 fi
 
+# extract fields stats by record
 cat "$folder"/processing/field_type | while read line; do
   fieldType=$(echo $line | mlrgo --ijsonl --onidx cut -f fieldType)
   field=$(echo $line | mlrgo --ijsonl --onidx cut -f field)
@@ -70,6 +72,7 @@ if [ -f "$folder"/processing/field_unique ]; then
   rm "$folder"/processing/field_unique
 fi
 
+# extract fields unique values count by record
 cat "$folder"/processing/field_type | while read line; do
   fieldType=$(echo $line | mlrgo --ijsonl --onidx cut -f fieldType)
   field=$(echo $line | mlrgo --ijsonl --onidx cut -f field)
@@ -94,10 +97,13 @@ if [ -f "$folder"/processing/field_null ]; then
   rm "$folder"/processing/field_null
 fi
 
+# Create new field for each input field, and insert 0 for each record, if the field is null
+# else insert 1
 mlrgo --csv put 'for (k,v in $*) { if (is_null($[k])) {$[k."_nullCheck"] = 1} else {$[k."_nullCheck"] = 0}}' then \
 cut -r -f "_nullCheck" then \
 rename -r '"_nullCheck",' "$folder"/input.csv >"$folder"/processing/field_null.csv
 
+# extract fields null values count by record
 cat "$folder"/processing/field_type | while read line; do
   fieldType=$(echo $line | mlrgo --ijsonl --onidx cut -f fieldType)
   field=$(echo $line | mlrgo --ijsonl --onidx cut -f field)
